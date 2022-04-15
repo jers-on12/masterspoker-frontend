@@ -19,3 +19,7 @@ body {
 .login-wrapper {
   margin-top: 50px;
 }
+
+.justify-left {
+  justify-content: flex-start !important;
+}

@@ -11,6 +11,18 @@
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
+  <script>
+    window.addEventListener("beforeunload", (e) => {
+      e.preventDefault();
+      let user = localStorage.getItem("__user_meta_data");
+      if (user !== null) {
+        user = JSON.parse(user);
+        if (!user?.remember) {
+          localStorage.removeItem("__user_meta_data");
+        }
+      }
+    });
+  </script>
 </body>
 
 </html>
