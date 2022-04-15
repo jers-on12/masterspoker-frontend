@@ -2,7 +2,7 @@ import Logo from "../assets/logo.png";
 import UserIcon from "../assets/loginpage_usernameicon.png";
 import LockIcon from "../assets/loginpage_lockicon.png";
 import Input from "../components/Input";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import HttpClient from "../helper/http";
 import Helmet from "react-helmet";
