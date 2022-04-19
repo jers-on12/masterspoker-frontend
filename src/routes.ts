@@ -1,5 +1,6 @@
 import Login from "./views/Login";
-import Register from "./views/Register";
+import Register from "./views/registration/Register";
+import OTPVerification from "./views/registration/OtpVerification";
 
 export default [
   {
@@ -9,5 +10,9 @@ export default [
   {
     path: "/register",
     element: Register,
+  },
+  {
+    path: "/otp-verification",
+    element: OTPVerification,
   },
 ];

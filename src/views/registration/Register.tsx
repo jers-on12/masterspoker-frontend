@@ -1,11 +1,16 @@
-import Logo from "../assets/logo.png";
-import UserIcon from "../assets/loginpage_usernameicon.png";
-import LockIcon from "../assets/loginpage_lockicon.png";
-import Input from "../components/Input";
+import Logo from "../../assets/logo.png";
+import UserIcon from "../../assets/loginpage_usernameicon.png";
+import LockIcon from "../../assets/loginpage_lockicon.png";
+import Input from "../../components/Input";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import HttpClient from "../helper/http";
+import HttpClient from "../../helper/http";
 import Helmet from "react-helmet";
+
+interface Progress {
+  route: string;
+  name: string;
+}
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +26,17 @@ const Register: React.FC = () => {
     aboveAge: false,
   });
   const [isRegistering, setRegistering] = useState(false);
+
+  useEffect(() => {
+    const progress = localStorage.getItem("__registration_progress");
+    const progressData: Progress = JSON.parse(
+      progress || '{ "name": "register", "route": "/register" }'
+    );
+
+    if (progressData.name !== "register") {
+      navigate(progressData.route);
+    }
+  }, []);
 
   useEffect(() => {
     let timeout: any;
@@ -120,10 +136,13 @@ const Register: React.FC = () => {
       return;
     }
 
-    setError("Registered successfully, Redirecting to login page...");
+    localStorage.setItem(
+      "__registration_progress",
+      JSON.stringify({ route: "/otp-verification", name: "otp" })
+    );
 
     setTimeout(() => {
-      navigate("/login");
+      navigate("/otp-verification");
     }, 2000);
   };
 
