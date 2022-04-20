@@ -126,11 +126,11 @@ const OTPVerification: React.FC = () => {
 
     localStorage.setItem(
       "__registration_progress",
-      JSON.stringify({ route: "/ekyc", name: "ekyc", data })
+      JSON.stringify({ route: "/ekyc-verification", name: "ekyc", data })
     );
 
     setTimeout(() => {
-      navigate("/ekyc");
+      navigate("/ekyc-verification");
     }, 2000);
   };
 
