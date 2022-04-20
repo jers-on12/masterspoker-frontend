@@ -10,6 +10,7 @@ import Helmet from "react-helmet";
 interface Progress {
   route: string;
   name: string;
+  data: any;
 }
 
 const Register: React.FC = () => {
@@ -97,19 +98,24 @@ const Register: React.FC = () => {
 
     setRegistering(true);
 
-    const journeyResponse = await HttpClient("auth/ekyc/journeyid", {
+    const otpResponse = await HttpClient("auth/register/player/otp/phone", {
       method: "POST",
+      body: JSON.stringify({
+        number: fields.phone_number,
+        email: fields.email,
+      }),
     });
 
-    if (journeyResponse.status !== 200) {
-      setError("Something wen't wrong!");
+    if (otpResponse.status !== 201) {
+      setRegistering(false);
+      setError("Something wen't wrong, please try again.");
       return;
     }
 
-    const journeyResult = await journeyResponse.json();
+    const otp_id = await otpResponse.text();
 
     const data = {
-      journeyId: journeyResult.journeyId,
+      otp_id,
       name: fields.complete_name,
       username: fields.username,
       email: fields.email,
@@ -124,7 +130,10 @@ const Register: React.FC = () => {
 
     const result = await response.json();
 
-    if (response.status === 400) {
+    if (
+      response.status === 400 &&
+      result.message !== "Phone number does not verified."
+    ) {
       setError(
         Array.isArray(result.message)
           ? result.message.join("<br/>")
@@ -138,7 +147,7 @@ const Register: React.FC = () => {
 
     localStorage.setItem(
       "__registration_progress",
-      JSON.stringify({ route: "/otp-verification", name: "otp" })
+      JSON.stringify({ route: "/otp-verification", name: "otp", data })
     );
 
     setTimeout(() => {
