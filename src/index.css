@@ -23,3 +23,18 @@ body {
 .justify-left {
   justify-content: flex-start !important;
 }
+
+[type='text'], [type='email'], [type='url'], [type='password'], [type='number'], [type='date'], [type='datetime-local'], [type='month'], [type='search'], [type='tel'], [type='time'], [type='week'], [multiple], textarea, select {
+  border: 0;
+}
+
+[type='checkbox']:focus, [type='radio']:focus {
+  box-shadow: none;
+    border: none;
+}
+
+[type='checkbox'], [type='radio'] {
+  border: none;
+  background-color: rgb(41 37 36)!important;
+  border-radius: 0!important
+}

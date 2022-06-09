@@ -1,6 +1,8 @@
 import Logo from "../../assets/logo.png";
 import UserIcon from "../../assets/loginpage_usernameicon.png";
 import LockIcon from "../../assets/loginpage_lockicon.png";
+import GamingLabIcon from "../../assets/gaming-lab.png";
+import PagCor2Icon from "../../assets/pagcor2.png";
 import Input from "../../components/Input";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -156,13 +158,13 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center relative">
       <Helmet>
         <title>Register - {import.meta.env.VITE_SITE_TITLE}</title>
       </Helmet>
-      <div className="login-wrapper mx-4">
-        <img className="w-96 mb-4" src={Logo} />
-        <h2 className="text-[#aeaeae] text-[1rem] font-[600] mb-2">SIGN UP</h2>
+      <div className="login-wrapper w-96">
+        <img className="w-80 mx-auto mb-4" src={Logo} />
+        <h2 className="text-[#fff] text-[1rem] font-[400] mb-6">Sign Up</h2>
         {error && (
           <div className="w-full bg-[#7b2121] py-[0.8em] px-4 text-[0.8rem] font-[400] text-[#aeaeae] mb-4">
             {error}
@@ -172,7 +174,7 @@ const Register: React.FC = () => {
           containerClass="mb-2"
           type="text"
           imageClass="w-4"
-          placeholder="Username"
+          placeholder="User name (No Spaces)"
           onChange={(e: any) =>
             setFields({ ...fields, username: e.target.value })
           }
@@ -235,8 +237,8 @@ const Register: React.FC = () => {
         <div className="flex flex-col justify-start items-start">
           <Input
             containerClass="text-[#aeaeae] text-[0.9rem] justify-left"
-            inputClass="w-4 mr-2"
             type="checkbox"
+            inputClass="w-4 mr-2 bg-zinc-900 text-gray-500 pr-0"
             label="EULA agree to the terms and conditions"
             onChange={(e: any) =>
               setFields({ ...fields, eula: e.target.checked })
@@ -245,8 +247,8 @@ const Register: React.FC = () => {
           />
           <Input
             containerClass="text-[#aeaeae] text-[0.9rem] justify-left"
-            inputClass="w-4 mr-2"
             type="checkbox"
+            inputClass="w-4 mr-2 bg-zinc-900 text-gray-500 pr-0"
             label="21 years old above"
             onChange={(e: any) =>
               setFields({ ...fields, aboveAge: e.target.checked })
@@ -254,16 +256,20 @@ const Register: React.FC = () => {
             checked={fields.aboveAge}
           />
         </div>
-        <div className="flex flex-col items-center justify-center mt-3">
+        <div className="flex flex-col items-center justify-center mt-3 mb-6">
           <button
             disabled={isRegistering}
             onClick={onRegisterSubmit}
-            className={`w-full bg-[#7b2121] py-[0.8em] px-[1.5em] text-[1rem] font-[600] ${
+            className={`w-56 rounded-lg mt-12 mb-16 bg-[#7b2121] py-[0.3em] px-[0.5em] text-[1rem] font-[600] ${
               isRegistering ? "text-[#aeaeae]" : "text-white"
             }`}
           >
             {isRegistering ? "Registering..." : "Next"}
           </button>
+        </div>
+        <div className="flex items-center justify-around w-96 mx-auto absolute bottom-0">
+           <div><img className="w-28" src={PagCor2Icon} /></div>
+           <div><img className="w-32" src={GamingLabIcon} /></div>
         </div>
       </div>
     </div>
