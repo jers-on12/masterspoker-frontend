@@ -1,5 +1,7 @@
 import UserIcon from "../../assets/loginpage_usernameicon.png";
 import Input from "../../components/Input";
+import GamingLabIcon from "../../assets/gaming-lab.png";
+import PagCor2Icon from "../../assets/pagcor2.png";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import HttpClient from "../../helper/http";
@@ -179,12 +181,16 @@ const OTPVerification: React.FC = () => {
           <button
             disabled={isSubmitting}
             onClick={onSubmit}
-            className={`w-full bg-[#7b2121] py-[0.8em] px-[1.5em] text-[1rem] font-[600] ${
+            className={`w-56 rounded-lg mt-12 mb-16 bg-[#7b2121] py-[0.3em] px-[0.5em] text-[1rem] font-[600] ${
               isSubmitting ? "text-[#aeaeae]" : "text-white"
             }`}
           >
             {isSubmitting ? "Submitting..." : "Next"}
           </button>
+        </div>
+        <div className="flex items-center justify-around w-96 mx-auto absolute bottom-0">
+           <div><img className="w-28" src={PagCor2Icon} /></div>
+           <div><img className="w-32" src={GamingLabIcon} /></div>
         </div>
       </div>
     </div>
