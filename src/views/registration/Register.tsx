@@ -178,17 +178,19 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e:any) => {
     e.preventDefault();
-    await setFormErrors(validate(formFields, "fields"));
+    const frontValidate = await validate(formFields, "fields");
     
     // passed front end validation
-    if(Object.keys(formErrors).length === 0){
+    if(Object.keys(frontValidate).length === 0){
       // API Calls
       const regAPI = await initialRegister();
 
       if(regAPI.message.length > 1) { // 1: Only otp id is the error
         var validateErr = regAPI.message.filter((e:string) => e !== 'otp_id should not be empty');
-        setFormErrors(validate({...validateErr}, "apiFields"));
-        return;
+        const backValidate = await validate({...validateErr}, "apiFields");
+        if((Object.keys(backValidate).length) >= 1) {
+          return; // return error
+        }
       }
       else { // proceed to OTP Verification
         const otpHash = await requestOTPHash();
@@ -209,6 +211,8 @@ const Register: React.FC = () => {
         }
         if (!values.email) {
           errors.email = "Email is required.";
+        } else if (!regex.test(values.email)) {
+          errors.email = "This is not a valid email format!";
         }
         if (!values.phone_number) {
           errors.phone_number = "Phone Number is required.";
@@ -236,6 +240,7 @@ const Register: React.FC = () => {
         break;
     }
     console.log(errors);
+    setFormErrors(errors);
     return errors;
   };
 
