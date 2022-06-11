@@ -17,6 +17,8 @@ interface Progress {
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+
+  /** Set states */
   const [error, setError] = useState("");
   const [fields, setFields] = useState({
     username: "",
