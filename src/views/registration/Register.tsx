@@ -81,13 +81,19 @@ const Register: React.FC = () => {
         console.log(otpHash);
         if(otpHash != 'error') { 
           setRegistering(true);
-          const formFieldsOTP:object = Object.assign({...formFields}, {otp_id: otpHash});
+          const data = {
+            otp_id : otpHash,
+            email: formFields.email,
+            phone_number: formFields.phone_number,
+          };
           // Set route to OTP Verify Form
           localStorage.setItem(
             "__registration_progress",
-            JSON.stringify({ route: "/otp-verification", name: "otp", formFieldsOTP })
+            JSON.stringify({ route: "/otp-verification", name: "otp", data })
           );
-          navigate("/otp-verification");
+          setTimeout(() => {
+            navigate("/otp-verification");
+          }, 2000);
         }
       }
     }
