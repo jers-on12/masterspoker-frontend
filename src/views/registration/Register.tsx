@@ -30,7 +30,6 @@ const Register: React.FC = () => {
   };
   const [formFields, setFormFields] = useState(initialValues);
   const [formErrors, setFormErrors] = useState({});
-  const [otpHash, setOTPHash] = useState(""); 
   const [isRegistering, setRegistering] = useState(false);
 
   /** User Effect */
@@ -44,121 +43,6 @@ const Register: React.FC = () => {
       navigate(progressData.route);
     }
   }, []);
-
-  // useEffect(() => {
-  //   let timeout: any;
-
-  //   if (error) {
-  //     timeout = setTimeout(() => {
-  //       setError("");
-  //     }, 5000);
-  //   }
-
-  //   return () => {
-  //     if (timeout) {
-  //       clearTimeout(timeout);
-  //     }
-  //   };
-  // }, [error]);
-
-  // const onRegisterSubmit = async (e: any) => {
-  //   if (fields.username.length < 1) {
-  //     setError("User Name is required.");
-  //     return;
-  //   }
-
-  //   if (fields.email.length < 1) {
-  //     setError("Email is required.");
-  //     return;
-  //   }
-
-  //   if (fields.phone_number.length < 1) {
-  //     setError("Phone Number is required.");
-  //     return;
-  //   }
-
-  //   if (fields.password.length < 1) {
-  //     setError("Password is required.");
-  //     return;
-  //   }
-
-  //   if (fields.conf_password.length < 1) {
-  //     setError("Confirm Password is required.");
-  //     return;
-  //   }
-
-  //   if (fields.password !== fields.conf_password) {
-  //     setError("Password doesn't match the confirm password.");
-  //     return;
-  //   }
-
-  //   if (!fields.eula) {
-  //     setError("You must agree the terms and conditions.");
-  //     return;
-  //   }
-
-  //   if (!fields.aboveAge) {
-  //     setError("You must 21 years old above to use this platform.");
-  //     return;
-  //   }
-
-  //   setRegistering(true);
-
-  //   const otpResponse = await HttpClient("auth/register/player/otp/phone", {
-  //     method: "POST",
-  //     body: JSON.stringify({
-  //       number: fields.phone_number,
-  //       email: fields.email,
-  //     }),
-  //   });
-
-  //   if (otpResponse.status !== 201) {
-  //     setRegistering(false);
-  //     setError("Something wen't wrong, please try again.");
-  //     return;
-  //   }
-
-  //   const otp_id = await otpResponse.text();
-
-  //   const data = {
-  //     otp_id,
-  //     username: fields.username,
-  //     email: fields.email,
-  //     phone_number: fields.phone_number,
-  //     password: fields.password,
-  //   };
-
-  //   const response = await HttpClient("auth/register/player", {
-  //     method: "POST",
-  //     body: JSON.stringify(data),
-  //   });
-
-  //   const result = await response.json();
-
-  //   if (
-  //     response.status === 400 &&
-  //     result.message !== "Phone number does not verified."
-  //   ) {
-  //     setError(
-  //       Array.isArray(result.message)
-  //         ? result.message.join("<br/>")
-  //         : result.message
-  //     );
-
-  //     setRegistering(false);
-
-  //     return;
-  //   }
-
-  //   localStorage.setItem(
-  //     "__registration_progress",
-  //     JSON.stringify({ route: "/otp-verification", name: "otp", data })
-  //   );
-
-  //   setTimeout(() => {
-  //     navigate("/otp-verification");
-  //   }, 2000);
-  // };
 
   useEffect(() => {
     // Debugging
@@ -194,9 +78,17 @@ const Register: React.FC = () => {
       }
       else { // proceed to OTP Verification
         const otpHash = await requestOTPHash();
-        setOTPHash(otpHash);
-        console.log(typeof otpHash);
         console.log(otpHash);
+        if(otpHash != 'error') { 
+          setRegistering(true);
+          const formFieldsOTP:object = Object.assign({...formFields}, {otp_id: otpHash});
+          // Set route to OTP Verify Form
+          localStorage.setItem(
+            "__registration_progress",
+            JSON.stringify({ route: "/otp-verification", name: "otp", formFieldsOTP })
+          );
+          navigate("/otp-verification");
+        }
       }
     }
   };
@@ -205,7 +97,7 @@ const Register: React.FC = () => {
     let errors:any = {};
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i; // email format
     switch(type) {
-      case "fields":
+      case "fields": // front end validation
         if (!values.username) {
           errors.username = "User Name is required.";
         }
@@ -233,7 +125,7 @@ const Register: React.FC = () => {
           errors.aboveAge = "You must 21 years old above to use this platform.";
         }
         break;
-      case "apiFields":
+      case "apiFields": // back end validation
         errors = {...values}; // assign the errors 
         break;
       default:
@@ -275,9 +167,17 @@ const Register: React.FC = () => {
       }),
     }); 
 
-    // sure resp is success since backend validation succeed
-    const otpResponse = otpRequest.text();
-    return otpResponse;
+    // sure resp is success since backend validation succeed    
+    if(otpRequest.status != 201) { // returns json
+      const otpResponse:any = await otpRequest.json();
+      const otpValidate = await validate({otp : otpResponse.message}, "apiFields");
+      if(Object.keys(otpValidate).length >= 1) {
+        return 'error';
+      }
+    }
+    else {
+      return otpRequest.text();
+    }
   }
 
   return (
