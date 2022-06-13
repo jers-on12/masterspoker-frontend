@@ -6,7 +6,6 @@ const Input: React.FC<any> = (props: any) => {
     >
       <input
         id={id}
-        name={props.name}
         type={props.type}
         placeholder={props.placeholder}
         onChange={props.onChange}

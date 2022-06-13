@@ -17,22 +17,19 @@ interface Progress {
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-
-  /** Set States */
-  const initialValues = {
+  const [error, setError] = useState("");
+  const [fields, setFields] = useState({
     username: "",
-    email: "",
+    complete_name: "",
     phone_number: "",
+    email: "",
     password: "",
     conf_password: "",
     eula: false,
     aboveAge: false,
-  };
-  const [formFields, setFormFields] = useState(initialValues);
-  const [formErrors, setFormErrors] = useState({});
+  });
   const [isRegistering, setRegistering] = useState(false);
 
-  /** User Effect */
   useEffect(() => {
     const progress = localStorage.getItem("__registration_progress");
     const progressData: Progress = JSON.parse(
@@ -45,146 +42,120 @@ const Register: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Debugging
-    console.log(formErrors);
-    if (Object.keys(formErrors).length === 0 && isRegistering) {
-      console.log(formFields);
+    let timeout: any;
+
+    if (error) {
+      timeout = setTimeout(() => {
+        setError("");
+      }, 5000);
     }
-  }, [formErrors]);
 
-  /** Actions */
-  const handleChange = (e:any) => {
-    const { name, value, checked } = e.target;
-    setFormFields({ ...formFields, [name]: 
-      name == 'eula' || name == 'aboveAge' ? checked : value 
-    });
-  };
-
-  const handleSubmit = async (e:any) => {
-    e.preventDefault();
-    const frontValidate = await validate(formFields, "fields");
-    
-    // passed front end validation
-    if(Object.keys(frontValidate).length === 0){
-      // API Calls
-      const regAPI = await initialRegister();
-
-      if(regAPI.message.length > 1) { // 1: Only otp id is the error
-        var validateErr = regAPI.message.filter((e:string) => e !== 'otp_id should not be empty');
-        const backValidate = await validate({...validateErr}, "apiFields");
-        if((Object.keys(backValidate).length) >= 1) {
-          return; // return error
-        }
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
       }
-      else { // proceed to OTP Verification
-        const otpHash = await requestOTPHash();
-        console.log(otpHash);
-        if(otpHash != 'error') { 
-          setRegistering(true);
-          const data = {
-            otp_id : otpHash,
-            email: formFields.email,
-            phone_number: formFields.phone_number,
-          };
-          // Set route to OTP Verify Form
-          localStorage.setItem(
-            "__registration_progress",
-            JSON.stringify({ route: "/otp-verification", name: "otp", data })
-          );
-          setTimeout(() => {
-            navigate("/otp-verification");
-          }, 2000);
-        }
-      }
+    };
+  }, [error]);
+
+  const onRegisterSubmit = async (e: any) => {
+    if (fields.complete_name.length < 1) {
+      setError("Complete Name is required.");
+      return;
     }
-  };
 
-  const validate = (values:any, type: string) => {
-    let errors:any = {};
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i; // email format
-    switch(type) {
-      case "fields": // front end validation
-        if (!values.username) {
-          errors.username = "User Name is required.";
-        }
-        if (!values.email) {
-          errors.email = "Email is required.";
-        } else if (!regex.test(values.email)) {
-          errors.email = "This is not a valid email format!";
-        }
-        if (!values.phone_number) {
-          errors.phone_number = "Phone Number is required.";
-        }
-        if (!values.password) {
-          errors.password = "Password is required.";
-        }
-        if (!values.conf_password) {
-          errors.conf_password = "Confirm Password is required.";
-        }
-        if (values.password !== values.conf_password) {
-          errors.conf_password = "Password doesn't match the confirm password.";
-        }
-        if (!values.eula) {
-          errors.eula = "You must agree the terms and conditions.";
-        }
-        if (!values.aboveAge) {
-          errors.aboveAge = "You must 21 years old above to use this platform.";
-        }
-        break;
-      case "apiFields": // back end validation
-        errors = {...values}; // assign the errors 
-        break;
-      default:
-        break;
+    if (fields.phone_number.length < 1) {
+      setError("Phone Number is required.");
+      return;
     }
-    console.log(errors);
-    setFormErrors(errors);
-    return errors;
-  };
 
-  /** API Calls
-   * Change to redux after presentation
-  */
+    if (fields.email.length < 1) {
+      setError("Email is required.");
+      return;
+    }
 
-  const initialRegister = async () => {
-    /** Check backend validation
-     * OTP Error will receive since not set
-    */
-    const frmDtls = Object.assign({...formFields}, {name: formFields.username, otp_id: null});
+    if (fields.password.length < 1) {
+      setError("Password is required.");
+      return;
+    }
 
-    const validateDtls = await HttpClient("auth/register/player", {
-      method: "POST",
-      body: JSON.stringify(frmDtls),
-    });
+    if (fields.conf_password.length < 1) {
+      setError("Confirm Password is required.");
+      return;
+    }
 
-    const validateRes = await validateDtls.json();
-    console.log(frmDtls);
-    console.log(validateRes);
+    if (fields.password !== fields.conf_password) {
+      setError("Password doesn't match the confirm password.");
+      return;
+    }
 
-    return validateRes;
-  }
+    if (!fields.eula) {
+      setError("You must agree the terms and conditions.");
+      return;
+    }
 
-  const requestOTPHash = async() => {
-    const otpRequest = await HttpClient("auth/register/player/otp/phone", {
+    if (!fields.aboveAge) {
+      setError("You must 21 years old above to use this platform.");
+      return;
+    }
+
+    setRegistering(true);
+
+    const otpResponse = await HttpClient("auth/register/player/otp/phone", {
       method: "POST",
       body: JSON.stringify({
-        number: formFields.phone_number,
-        email: formFields.email,
+        number: fields.phone_number,
+        email: fields.email,
       }),
-    }); 
+    });
 
-    // sure resp is success since backend validation succeed    
-    if(otpRequest.status != 201) { // returns json
-      const otpResponse:any = await otpRequest.json();
-      const otpValidate = await validate({otp : otpResponse.message}, "apiFields");
-      if(Object.keys(otpValidate).length >= 1) {
-        return 'error';
-      }
+    if (otpResponse.status !== 201) {
+      setRegistering(false);
+      setError("Something wen't wrong, please try again.");
+      return;
     }
-    else {
-      return otpRequest.text();
+
+    const otp_id = await otpResponse.text();
+
+    const data = {
+      otp_id,
+      name: fields.complete_name,
+      username: fields.username,
+      email: fields.email,
+      phone_number: fields.phone_number,
+      password: fields.password,
+    };
+
+    const response = await HttpClient("auth/register/player", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (
+      response.status === 400 &&
+      result.message !== "Phone number does not verified."
+    ) {
+      setError(
+        Array.isArray(result.message)
+          ? result.message.join("<br/>")
+          : result.message
+      );
+
+      setRegistering(false);
+
+      return;
     }
-  }
+
+    localStorage.setItem(
+      "__registration_progress",
+      JSON.stringify({ route: "/otp-verification", name: "otp", data })
+    );
+
+    setTimeout(() => {
+      navigate("/otp-verification");
+    }, 2000);
+  };
 
   return (
     <div className="flex justify-center relative">
@@ -194,101 +165,112 @@ const Register: React.FC = () => {
       <div className="login-wrapper w-96">
         <img className="w-80 mx-auto mb-4" src={Logo} />
         <h2 className="text-[#fff] text-[1rem] font-[400] mb-6">Sign Up</h2>
-          {Object.keys(formErrors).length >= 1 && !isRegistering && (
-            <div className="w-full bg-[#7b2121] py-[0.8em] px-4 text-[0.8rem] font-[400] text-[#aeaeae] mb-4">
-              {
-                // stucked: fix this warning issue later
-                Object.keys(formErrors).map((key) => <li key={key}>{formErrors[key]}</li> )
-              }
-            </div>
-          )}
-        <form onSubmit={handleSubmit}>
+        {error && (
+          <div className="w-full bg-[#7b2121] py-[0.8em] px-4 text-[0.8rem] font-[400] text-[#aeaeae] mb-4">
+            {error}
+          </div>
+        )}
         <Input
           containerClass="mb-2"
           type="text"
-          name="username"
           imageClass="w-4"
-          placeholder="User Name (No Spaces)"
-          onChange={handleChange}
-          value={formFields.username}
+          placeholder="User name (No Spaces)"
+          onChange={(e: any) =>
+            setFields({ ...fields, username: e.target.value })
+          }
+          value={fields.username}
+          icon={UserIcon}
+        />
+        <Input
+          containerClass="mb-2"
+          type="text"
+          imageClass="w-4"
+          placeholder="Complete Name"
+          onChange={(e: any) =>
+            setFields({ ...fields, complete_name: e.target.value })
+          }
+          value={fields.complete_name}
           icon={UserIcon}
         />
         <Input
           containerClass="mb-2"
           type="email"
-          name="email"
           imageClass="w-4"
           placeholder="Email"
-          onChange={handleChange}
-          value={formFields.email}
+          onChange={(e: any) => setFields({ ...fields, email: e.target.value })}
+          value={fields.email}
           icon={LockIcon}
         />
         <Input
           containerClass="mb-2"
           type="number"
-          name="phone_number"
           imageClass="w-4"
           placeholder="Phone Number"
-          onChange={handleChange}
-          value={formFields.phone_number}
+          onChange={(e: any) =>
+            setFields({ ...fields, phone_number: e.target.value })
+          }
+          value={fields.phone_number}
           icon={LockIcon}
         />
         <Input
           containerClass="mb-2"
           type="password"
-          name="password"
           imageClass="w-4"
           placeholder="Password"
-          onChange={handleChange}
-          value={formFields.password}
+          onChange={(e: any) =>
+            setFields({ ...fields, password: e.target.value })
+          }
+          value={fields.password}
           icon={LockIcon}
         />
         <Input
           containerClass="mb-2"
           type="password"
-          name="conf_password"
           imageClass="w-4"
           placeholder="Confirm Password"
-          onChange={handleChange}
-          value={formFields.conf_password}
+          onChange={(e: any) =>
+            setFields({ ...fields, conf_password: e.target.value })
+          }
+          value={fields.conf_password}
           icon={LockIcon}
         />
         <div className="flex flex-col justify-start items-start">
           <Input
             containerClass="text-[#aeaeae] text-[0.9rem] justify-left"
             type="checkbox"
-            name="eula"
             inputClass="w-4 mr-2 bg-zinc-900 text-gray-500 pr-0"
-            label="I agree to the terms and conditions"
-            onChange={handleChange}
-            checked={formFields.eula}
+            label="EULA agree to the terms and conditions"
+            onChange={(e: any) =>
+              setFields({ ...fields, eula: e.target.checked })
+            }
+            checked={fields.eula}
           />
           <Input
             containerClass="text-[#aeaeae] text-[0.9rem] justify-left"
             type="checkbox"
-            name="aboveAge"
             inputClass="w-4 mr-2 bg-zinc-900 text-gray-500 pr-0"
-            label="I am 21 years old and above"
-            onChange={handleChange}
-            checked={formFields.aboveAge}
+            label="21 years old above"
+            onChange={(e: any) =>
+              setFields({ ...fields, aboveAge: e.target.checked })
+            }
+            checked={fields.aboveAge}
           />
         </div>
         <div className="flex flex-col items-center justify-center mt-3 mb-6">
           <button
             disabled={isRegistering}
-            type="submit"
+            onClick={onRegisterSubmit}
             className={`w-56 rounded-lg mt-12 mb-16 bg-[#7b2121] py-[0.3em] px-[0.5em] text-[1rem] font-[600] ${
               isRegistering ? "text-[#aeaeae]" : "text-white"
             }`}
           >
             {isRegistering ? "Registering..." : "Next"}
           </button>
-        </div>  
+        </div>
         <div className="flex items-center justify-around w-96 mx-auto absolute bottom-0">
            <div><img className="w-28" src={PagCor2Icon} /></div>
            <div><img className="w-32" src={GamingLabIcon} /></div>
         </div>
-      </form>
       </div>
     </div>
   );
